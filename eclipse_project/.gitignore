@@ -4,6 +4,9 @@ tmp
 *~
 *.o
 *.a
+.settings/
+.cproject
+.project
 
 /Debug_*/
 /tutorials/00-empty-rodos-project/HelloWorld/Debug_*/
