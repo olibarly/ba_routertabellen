@@ -23,6 +23,7 @@ UART_Thread threadB(nameB, msgB, &uartB, 2);
 */
 
 
-/* Multi Board UART */
-HAL_UART uart(UART_DEBUG);
-MultiBoardUART thread(&uart);
+/* Multi Board UART Static Routing*/
+//MultiBoardUART thread(0b00, true); // Board 1
+//MultiBoardUART thread(0b01, true); // Board 2
+//MultiBoardUART thread(0b10, true); // Board 3
