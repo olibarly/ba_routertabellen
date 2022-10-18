@@ -9,16 +9,8 @@ class MultiBoardUART : StaticThread<> {
 public:
 	MultiBoardUART(uint8_t binId); //allows up to 256 different IDs, with 256 being used as a "broadcast" address
 
-private:
-	HAL_UART uartA;
-	HAL_UART uartB;
-
+protected:
 	uint8_t binaryIdentifier;
-
-	HAL_GPIO* sendLED;
-	HAL_GPIO* rcvLED;
-	HAL_GPIO* rcvSuccess;
-	HAL_GPIO* statusLED;
 
 	std::map<uint8_t, HAL_UART*> routingTable;
 	std::list<uint8_t> reachableNextHops;
@@ -33,6 +25,14 @@ private:
 	size_t receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen = 100);
 	void decodeAndHandleRcvMsg(HAL_UART* uart, void* msg, const uint8_t* targetAddress, uint8_t* nextHopAddress, HAL_UART* nextHopGateway);
 
+
+private:
+	HAL_UART uartA;
+	HAL_UART uartB;
+
+	HAL_GPIO* sendLED;
+	HAL_GPIO* rcvLED;
+	HAL_GPIO* statusLED;
 	void init();
 	void run();
 };

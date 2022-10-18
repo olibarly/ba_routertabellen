@@ -1,6 +1,6 @@
-#include "printf_test.h"
-#include "uart_test.h"
-#include "multi_board_uart.h"
+#include "../tests/printf_test.h"
+#include "../tests/uart_test.h"
+#include "../base/multi_board_uart.h"
 
 
 /* PRINTF Test */

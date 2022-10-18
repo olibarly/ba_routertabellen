@@ -6,7 +6,7 @@
 #include "printf_test.h"
 
 #include "rodos.h"
-#include "LED.h"
+#include "../misc/LED.h"
 
 
 PRINTF_Test::PRINTF_Test(const char* name) : StaticThread(name) { }

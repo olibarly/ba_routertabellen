@@ -1,7 +1,7 @@
 #include "multi_board_uart.h"
 
 #include "rodos.h"
-#include "LED.h"
+#include "../misc/LED.h"
 
 #include <map>
 #include <list>
@@ -34,7 +34,6 @@ MultiBoardUART::MultiBoardUART(uint8_t binId) : StaticThread(), uartA(uartIDX1),
 
 	sendLED = &greenLED;
 	rcvLED = &redLED;
-	rcvSuccess = &orangeLED;
 	statusLED = &blueLED;
 }
 
@@ -112,7 +111,6 @@ void MultiBoardUART::decodeAndHandleRcvMsg(HAL_UART* uart, void* msg, const uint
 void MultiBoardUART::init() {
 	sendLED->init(true, 1, 0);
 	rcvLED->init(true, 1, 0);
-	rcvSuccess->init(true, 1, 0);
 	statusLED->init(true, 1, 1);
 
 	uartA.init(115200);
@@ -135,7 +133,6 @@ void MultiBoardUART::run() {
 	TIME_LOOP(1*SECONDS, loopInterval) {
 		sendLED->setPins(0);
 		rcvLED->setPins(0);
-		rcvSuccess->setPins(0);
 		statusLED->setPins(statusPinVal);
 
 		if (sendIntervalCounter >= sendInterval / loopInterval) {
