@@ -7,11 +7,12 @@
 #include <list>
 #include <cassert>
 
-#define ALIVE_MSG_BROADCAST_ADDRESS (reserved_addresses["ALIVE_MSG_BROADCAST_ADDRESS"])
 
-std::map<const char*, uint8_t> reserved_addresses = {
-		{"ALIVE_MSG_BROADCAST_ADDRESS", 0b11111111}
-};
+/** Definition of STATIC member [reserved_addresses]*/
+const std::map<const char*, binId> reserved_addresses  = {
+		{"ALIVE_MSG_BROADCAST_ADDRESS", ALIVE_MSG_BROADCAST_ADDRESS}
+	};
+
 
 HAL_UART uartIDX1(UART_IDX1); // working: UART_IDX1, UARTIDX2, UART_IDX6
 HAL_UART uartIDX6(UART_IDX6);
@@ -28,41 +29,33 @@ bool strEqual(const char* a, const char* b) {
 }
 
 
-MultiBoardUART::MultiBoardUART(uint8_t binId) : StaticThread(), uartA(uartIDX1), uartB(uartIDX6) {
-	assert(checkBinIdValid(binId));
-	binaryIdentifier = binId;
+MultiBoardUART::MultiBoardUART(binId binaryId) : StaticThread(), uartA(uartIDX1), uartB(uartIDX6) {
+	assert(checkBinIdValid(binaryId));
+	binaryIdentifier = binaryId;
 
 	sendLED = &greenLED;
-	rcvLED = &redLED;
+	rcvLED = &redLED;f
 	statusLED = &blueLED;
 }
 
-bool MultiBoardUART::checkBinIdValid(uint8_t binId) {
+bool MultiBoardUART::checkBinIdValid(binId binaryId) {
 
-	for (std::map<const char*, uint8_t>::iterator it = reserved_addresses.begin(); it != reserved_addresses.end(); ++it) {
-		if (binId == it->second) return false;
+	for (std::map<const char*, binId>::const_iterator it = reserved_addresses.begin(); it != reserved_addresses.end(); ++it) {
+		if (binaryId == it->second) return false;
 	}
 
 	return true;
 }
 
 
-void MultiBoardUART::updateTable(HAL_UART* uart, uint8_t binId) {
-	routingTable[binId] = uart;
+void MultiBoardUART::updateTable(HAL_UART* uart, binId binaryId) {
+	routingTable[binaryId] = uart;
 }
 
 void MultiBoardUART::send(HAL_UART* uart, const void* msg) {
 	sendLED->setPins(1);
 
 	uart->write(msg, strlen(static_cast<const char*>(msg))); // strlen + 1 to ensure null terminator is also sent
-}
-
-void MultiBoardUART::sendAliveMsg() {
-	char msg[2];
-	msg[0] = ALIVE_MSG_BROADCAST_ADDRESS;
-	msg[1] = binaryIdentifier;
-	send(&uartA, msg);
-	send(&uartB, msg);
 }
 
 size_t MultiBoardUART::receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
@@ -79,33 +72,9 @@ size_t MultiBoardUART::receive(HAL_UART* uart, void* rcvBuffer, const size_t max
 	return -1;
 }
 
-void MultiBoardUART::decodeAndHandleRcvMsg(HAL_UART* uart, void* msg, const uint8_t* targetAddress, uint8_t* nextHopAddress, HAL_UART* nextHopGateway) {
-	targetAddress = static_cast<uint8_t*>(msg);
-
-	if (*targetAddress == ALIVE_MSG_BROADCAST_ADDRESS) {
-		updateTable(uart, static_cast<uint8_t*>(msg)[1]);
-	}
-	else if (*targetAddress != binaryIdentifier) {
-		uint8_t diff = *targetAddress ^ binaryIdentifier;
-
-		// Find first bit difference from back (LSB)
-		int bitIndex = 0;
-		while (diff && !(diff & 1)) {
-			diff >>= 1;
-			bitIndex++;
-		}
-
-		// Find nextHop that matches that difference
-		for (std::list<uint8_t>::iterator it = reachableNextHops.begin(); it != reachableNextHops.end(); ++it){
-			if ((*it >> bitIndex) & 1) {
-				nextHopAddress = &*it;
-				nextHopGateway = routingTable[*it];
-
-				send(nextHopGateway, msg);
-				break;
-			}
-		}
-	} else {}
+void MultiBoardUART::decodeRcvMsg(void* msg, const binId* targetAddress) {
+	targetAddress = static_cast<binId*>(msg);
+	msg = static_cast<binId*>(msg) + 1;
 }
 
 void MultiBoardUART::init() {

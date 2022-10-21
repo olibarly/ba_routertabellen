@@ -1,6 +1,6 @@
 #include "../tests/printf_test.h"
 #include "../tests/uart_test.h"
-#include "../base/multi_board_uart.h"
+//#include "../base/hypercube_routing.h"
 
 
 /* PRINTF Test */
