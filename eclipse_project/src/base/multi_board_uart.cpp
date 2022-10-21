@@ -34,7 +34,7 @@ MultiBoardUART::MultiBoardUART(binId binaryId) : StaticThread(), uartA(uartIDX1)
 	binaryIdentifier = binaryId;
 
 	sendLED = &greenLED;
-	rcvLED = &redLED;f
+	rcvLED = &redLED;
 	statusLED = &blueLED;
 }
 
@@ -52,10 +52,10 @@ void MultiBoardUART::updateTable(HAL_UART* uart, binId binaryId) {
 	routingTable[binaryId] = uart;
 }
 
-void MultiBoardUART::send(HAL_UART* uart, const void* msg) {
+void MultiBoardUART::send(HAL_UART* uart, const void* msg, size_t size) {
 	sendLED->setPins(1);
 
-	uart->write(msg, strlen(static_cast<const char*>(msg))); // strlen + 1 to ensure null terminator is also sent
+	uart->write(msg, size); // strlen + 1 to ensure null terminator is also sent
 }
 
 size_t MultiBoardUART::receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
@@ -106,7 +106,7 @@ void MultiBoardUART::run() {
 
 		if (sendIntervalCounter >= sendInterval / loopInterval) {
 			sendIntervalCounter = 0;
-			send(&uartA, "test");
+			send(&uartA, "test", strlen("test"));
 		}
 		if (sendAliveIntervalCounter >= sendAliveInterval / loopInterval) {
 			sendAliveIntervalCounter = 0;

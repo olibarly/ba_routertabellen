@@ -29,13 +29,13 @@ protected:
 
 	void updateTable(HAL_UART* uart, binId binaryId);
 
-	void send(HAL_UART* uart, const void* msg);
+	void send(HAL_UART* uart, const void* msg, size_t size);
 	virtual void sendAliveMsg();
-	virtual void sendToAddress(binId* targetAddress, const void* msg);
+	virtual void sendToAddress(binId* targetAddress, const void* msg, size_t size);
 
 	size_t receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen = 100);
 	void decodeRcvMsg(void* msg, const binId* targetAddress);
-	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId* targetAddress, binId* nextHopAddress, HAL_UART* nextHopGateway);
+	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId* targetAddress, size_t size, binId* nextHopAddress, HAL_UART* nextHopGateway);
 
 private:
 	HAL_GPIO* sendLED;
