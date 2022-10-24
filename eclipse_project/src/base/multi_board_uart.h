@@ -34,15 +34,15 @@ protected:
 
 	bool checkBinIdValid(binId BinaryId);
 
-	void updateTable(HAL_UART* uart, binId binaryId);
+	void updateTable(binId binaryId, HAL_UART& uart);
 
-	void send(HAL_UART* uart, const void* msg, size_t size);
+	void send(HAL_UART& uart, const void* msg, size_t size);
 	virtual void sendAliveMsg();
-	virtual void sendToAddress(binId* targetAddress, const void* msg, size_t size);
+	virtual void sendToAddress(binId targetAddress, const void* msg, size_t size);
 
-	size_t receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen = 100);
-	void decodeRcvMsg(const binId* targetAddress, void* msg);
-	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId* targetAddress, size_t size, binId* nextHopAddress, HAL_UART* nextHopGateway);
+	size_t receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen = 100);
+	void decodeRcvMsg(binId& targetAddress, void* msg);
+	virtual void handleRcvMsg(HAL_UART& uart, void* msg, const binId targetAddress, size_t size, binId& nextHopAddress, HAL_UART* nextHopGateway);
 
 private:
 	HAL_GPIO* sendLED;

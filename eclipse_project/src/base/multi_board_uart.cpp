@@ -48,34 +48,34 @@ bool MultiBoardUART::checkBinIdValid(binId binaryId) {
 }
 
 
-void MultiBoardUART::updateTable(HAL_UART* uart, binId binaryId) {
+void MultiBoardUART::updateTable(binId binaryId, HAL_UART& uart) {
 	RoutingTableEntry newEntry;
 	newEntry.binaryId = binaryId;
-	newEntry.uartGateway = uart;
+	newEntry.uartGateway = &uart;
 	newEntry.ttl = 120;
 
 	routingTable[binaryId] = newEntry;
 }
 
-void MultiBoardUART::send(HAL_UART* uart, const void* msg, size_t size) {
+void MultiBoardUART::send(HAL_UART& uart, const void* msg, size_t size) {
 	sendLED->setPins(1);
 
-	uart->write(msg, size); // strlen + 1 to ensure null terminator is also sent
+	uart.write(msg, size); // strlen + 1 to ensure null terminator is also sent
 }
 
-size_t MultiBoardUART::receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
-	if (uart->isDataReady()) {
+size_t MultiBoardUART::receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
+	if (uart.isDataReady()) {
 		rcvLED->setPins(1);
 
-		size_t readLen = uart->read(rcvBuffer, maxLen);
+		size_t readLen = uart.read(rcvBuffer, maxLen);
 
 		return readLen;
 	}
 	return 0;
 }
 
-void MultiBoardUART::decodeRcvMsg(const binId* targetAddress, void* msg) {
-	targetAddress = static_cast<binId*>(msg);
+void MultiBoardUART::decodeRcvMsg(binId& targetAddress, void* msg) {
+	targetAddress = *static_cast<binId*>(msg);
 	msg = static_cast<binId*>(msg) + 1;
 }
 
@@ -120,25 +120,25 @@ void MultiBoardUART::run() {
 		}
 
 		char rcvBufferA[100];
-		size_t rcvSizeA = receive(&uartA, rcvBufferA);
+		size_t rcvSizeA = receive(uartA, rcvBufferA);
 		if (rcvSizeA != 0) {
-			binId* targetAddress;
+			binId targetAddress;
 			decodeRcvMsg(targetAddress, rcvBufferA);
 
-			binId* nextHopAddress;
+			binId nextHopAddress;
 			HAL_UART* nextHopGateway;
-			handleRcvMsg(&uartA, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+			handleRcvMsg(uartA, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
 		}
 
 		char rcvBufferB[100];
-		size_t rcvSizeB = receive(&uartB, rcvBufferB);
+		size_t rcvSizeB = receive(uartB, rcvBufferB);
 		if (rcvSizeB != 0) {
-			binId* targetAddress;
+			binId targetAddress;
 			decodeRcvMsg(targetAddress, rcvBufferB);
 
-			binId* nextHopAddress;
+			binId nextHopAddress;
 			HAL_UART* nextHopGateway;
-			handleRcvMsg(&uartB, rcvBufferB, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+			handleRcvMsg(uartB, rcvBufferB, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
 		}
 
 		statusPinVal ^= 1;

@@ -31,30 +31,30 @@ void HypercubeRouting::sendAliveMsg() {
 
 	int size = sizeof(binId) * 2;
 
-	send(&uartA, msg, size);
-	send(&uartB, msg, size);
+	send(uartA, msg, size);
+	send(uartB, msg, size);
 }
 
-void HypercubeRouting::sendToAddress(binId* targetAddress, const void *msg, size_t size) {
+void HypercubeRouting::sendToAddress(binId targetAddress, const void* msg, size_t size) {
 	HAL_UART* nextHopGateway;
-	binId* nextHopAddress;
+	binId nextHopAddress;
 
 	calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
-	send(nextHopGateway, msg, size);
+	send(*nextHopGateway, msg, size);
 }
 
-void HypercubeRouting::handleRcvMsg(HAL_UART *uart, void *msg, const binId *targetAddress, size_t size, binId *nextHopAddress, HAL_UART *nextHopGateway) {
-	if (*targetAddress == ALIVE_MSG_BROADCAST_ADDRESS) {
-		updateTable(uart, static_cast<binId*>(msg)[1]);
-	} else if (*targetAddress != binaryIdentifier) {
+void HypercubeRouting::handleRcvMsg(HAL_UART& uart, void* msg, const binId targetAddress, size_t size, binId& nextHopAddress, HAL_UART* nextHopGateway) {
+	if (targetAddress == ALIVE_MSG_BROADCAST_ADDRESS) {
+		updateTable(static_cast<binId*>(msg)[0], uart);
+	} else if (targetAddress != binaryIdentifier) {
 		calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
-		send(nextHopGateway, msg, size);
+		send(*nextHopGateway, msg, size);
 	} else {
 	}
 }
 
-void HypercubeRouting::calculateNextHopFromTargetAddress(const binId* targetAddress, HAL_UART* nextHopUartGateway, binId* nextHopAddress) {
-	binId diff = *targetAddress ^ binaryIdentifier;
+void HypercubeRouting::calculateNextHopFromTargetAddress(const binId targetAddress, HAL_UART* nextHopUartGateway, binId nextHopAddress) {
+	binId diff = targetAddress ^ binaryIdentifier;
 
 	// Find first bit difference from back (LSB)
 	int bitIndex = 0;
@@ -66,7 +66,7 @@ void HypercubeRouting::calculateNextHopFromTargetAddress(const binId* targetAddr
 	// Find nextHop that matches that difference
 	for (std::list<uint8_t>::iterator it = reachableNextHops.begin(); it != reachableNextHops.end(); ++it) {
 		if ((*it >> bitIndex) & 1) {
-			nextHopAddress = &*it;
+			nextHopAddress = *it;
 			nextHopUartGateway = static_cast<RoutingTableEntry>(routingTable[*it]).uartGateway;
 			break;
 		}
