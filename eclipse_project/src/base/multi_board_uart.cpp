@@ -120,11 +120,26 @@ void MultiBoardUART::run() {
 		}
 
 		char rcvBufferA[100];
-		receive(&uartA, rcvBufferA);
-		//decodeRcvMsg(uartA, rcvBufferA);
+		size_t rcvSizeA = receive(&uartA, rcvBufferA);
+		if (rcvSizeA != -1) {
+			decodeRcvMsg(uartA, rcvBufferA);
+
+			binId* targetAddress;
+			binId* nextHopAddress;
+			HAL_UART* nextHopGateway;
+			handleRcvMsg(&uartA, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+		}
+
 		char rcvBufferB[100];
-		receive(&uartB, rcvBufferB);
-		//decodeRcvMsg(uartB, rcvBufferB);
+		size_t rcvSizeB = receive(&uartB, rcvBufferB);
+		if (rcvSizeB != -1) {
+			decodeRcvMsg(uartB, rcvBufferB);
+
+			binId* targetAddress;
+			binId* nextHopAddress;
+			HAL_UART* nextHopGateway;
+			handleRcvMsg(&uartB, rcvBufferB, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+		}
 
 		statusPinVal ^= 1;
 		sendIntervalCounter++;
