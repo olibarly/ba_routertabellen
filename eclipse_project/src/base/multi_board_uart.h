@@ -10,6 +10,12 @@ typedef uint8_t binId;
 #define ALIVE_MSG_BROADCAST_ADDRESS 0b11111111
 
 
+struct RoutingTableEntry {
+	binId binaryId;
+	HAL_UART* uartGateway;
+	int64_t ttl;
+};
+
 class MultiBoardUART : StaticThread<> {
 public:
 	MultiBoardUART(binId binaryId); //allows up to 256 different IDs, with 256 being used as a "broadcast" address
@@ -22,7 +28,7 @@ protected:
 
 	binId binaryIdentifier;
 
-	std::map<binId, HAL_UART*> routingTable;
+	std::map<binId, RoutingTableEntry> routingTable;
 	std::list<binId> reachableNextHops;
 
 	bool checkBinIdValid(binId BinaryId);

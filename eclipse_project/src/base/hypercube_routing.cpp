@@ -17,7 +17,7 @@ void HypercubeRouting::sendAliveMsg() {
 	 * target address (here alive msg broadcast address) [SpaceWire header Size]
 	 *
 	 * Body:
-	 * binary Identifier of self [binId] -- TTL [uint8_t]
+	 * binary Identifier of self [binId]
 	 */
 
 	void* msg;
@@ -27,12 +27,9 @@ void HypercubeRouting::sendAliveMsg() {
 	//Body: own binary Identifier/Address
 	binId* body1 = header + sizeof(binId);
 	*body1 = binaryIdentifier;
-	//Body: TTL
-	uint8_t* body2 = body1 + sizeof(binId);
-	*body2 = 60;
 
 
-	int size = sizeof(binId) * 2 + sizeof(uint8_t);
+	int size = sizeof(binId) * 2;
 
 	send(&uartA, msg, size);
 	send(&uartB, msg, size);
@@ -70,7 +67,7 @@ void HypercubeRouting::calculateNextHopFromTargetAddress(const binId* targetAddr
 	for (std::list<uint8_t>::iterator it = reachableNextHops.begin(); it != reachableNextHops.end(); ++it) {
 		if ((*it >> bitIndex) & 1) {
 			nextHopAddress = &*it;
-			nextHopUartGateway = routingTable[*it];
+			nextHopUartGateway = static_cast<RoutingTableEntry>(routingTable[*it]).uartGateway;
 			break;
 		}
 	}

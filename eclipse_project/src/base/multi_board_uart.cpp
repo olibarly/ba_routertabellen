@@ -49,7 +49,12 @@ bool MultiBoardUART::checkBinIdValid(binId binaryId) {
 
 
 void MultiBoardUART::updateTable(HAL_UART* uart, binId binaryId) {
-	routingTable[binaryId] = uart;
+	RoutingTableEntry newEntry;
+	newEntry.binaryId = binaryId;
+	newEntry.uartGateway = uart;
+	newEntry.ttl = 120;
+
+	routingTable[binaryId] = newEntry;
 }
 
 void MultiBoardUART::send(HAL_UART* uart, const void* msg, size_t size) {
@@ -63,9 +68,6 @@ size_t MultiBoardUART::receive(HAL_UART* uart, void* rcvBuffer, const size_t max
 		rcvLED->setPins(1);
 
 		size_t readLen = uart->read(rcvBuffer, maxLen);
-
-		//const char* expectedString = "test";
-		//if (strEqual(rcvBuffer, expectedString)) rcvSuccess->setPins(1);
 
 		return readLen;
 	}
@@ -90,7 +92,6 @@ void MultiBoardUART::run() {
 	int sendIntervalCounter = 0;
 	int sendAliveIntervalCounter = 0;
 
-	int64_t sendInterval = 2*SECONDS;
 	int64_t sendAliveInterval = 5*SECONDS;
 	int64_t loopInterval = 50*MILLISECONDS;
 
@@ -99,15 +100,20 @@ void MultiBoardUART::run() {
 
 	sendAliveMsg();
 
-	TIME_LOOP(1*SECONDS, loopInterval) {
+	TIME_LOOP(0*SECONDS, loopInterval) {
 		sendLED->setPins(0);
 		rcvLED->setPins(0);
 		statusLED->setPins(statusPinVal);
 
-		if (sendIntervalCounter >= sendInterval / loopInterval) {
-			sendIntervalCounter = 0;
-			send(&uartA, "test", strlen("test"));
+		std::list<std::map<binId, RoutingTableEntry>::iterator> elementsToRemove;
+
+		for (auto it = routingTable.begin(); it != routingTable.cend(); ++it) {
+			it->second.ttl -= loopInterval;
+			if (it->second.ttl <= 0) elementsToRemove.push_back(it);
 		}
+		for (auto e : elementsToRemove) routingTable.erase(e);
+
+
 		if (sendAliveIntervalCounter >= sendAliveInterval / loopInterval) {
 			sendAliveIntervalCounter = 0;
 			sendAliveMsg();
