@@ -71,10 +71,10 @@ size_t MultiBoardUART::receive(HAL_UART* uart, void* rcvBuffer, const size_t max
 
 		return readLen;
 	}
-	return -1;
+	return 0;
 }
 
-void MultiBoardUART::decodeRcvMsg(void* msg, const binId* targetAddress) {
+void MultiBoardUART::decodeRcvMsg(const binId* targetAddress, void* msg) {
 	targetAddress = static_cast<binId*>(msg);
 	msg = static_cast<binId*>(msg) + 1;
 }
@@ -121,10 +121,10 @@ void MultiBoardUART::run() {
 
 		char rcvBufferA[100];
 		size_t rcvSizeA = receive(&uartA, rcvBufferA);
-		if (rcvSizeA != -1) {
-			decodeRcvMsg(uartA, rcvBufferA);
-
+		if (rcvSizeA != 0) {
 			binId* targetAddress;
+			decodeRcvMsg(targetAddress, rcvBufferA);
+
 			binId* nextHopAddress;
 			HAL_UART* nextHopGateway;
 			handleRcvMsg(&uartA, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
@@ -132,10 +132,10 @@ void MultiBoardUART::run() {
 
 		char rcvBufferB[100];
 		size_t rcvSizeB = receive(&uartB, rcvBufferB);
-		if (rcvSizeB != -1) {
-			decodeRcvMsg(uartB, rcvBufferB);
-
+		if (rcvSizeB != 0) {
 			binId* targetAddress;
+			decodeRcvMsg(targetAddress, rcvBufferB);
+
 			binId* nextHopAddress;
 			HAL_UART* nextHopGateway;
 			handleRcvMsg(&uartB, rcvBufferB, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);

@@ -16,6 +16,7 @@ struct RoutingTableEntry {
 	int64_t ttl;
 };
 
+
 class MultiBoardUART : StaticThread<> {
 public:
 	MultiBoardUART(binId binaryId); //allows up to 256 different IDs, with 256 being used as a "broadcast" address
@@ -40,7 +41,7 @@ protected:
 	virtual void sendToAddress(binId* targetAddress, const void* msg, size_t size);
 
 	size_t receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen = 100);
-	void decodeRcvMsg(void* msg, const binId* targetAddress);
+	void decodeRcvMsg(const binId* targetAddress, void* msg);
 	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId* targetAddress, size_t size, binId* nextHopAddress, HAL_UART* nextHopGateway);
 
 private:
