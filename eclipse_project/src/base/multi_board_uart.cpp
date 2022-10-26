@@ -29,7 +29,7 @@ bool strEqual(const char* a, const char* b) {
 }
 
 
-MultiBoardUART::MultiBoardUART(binId binaryId) : StaticThread(), uartA(uartIDX1), uartB(uartIDX6) {
+MultiBoardUART::MultiBoardUART(binId binaryId) : StaticThread(), uartGateways{uartIDX1, uartIDX6}{
 	assert(checkBinIdValid(binaryId));
 	binaryIdentifier = binaryId;
 
@@ -52,7 +52,7 @@ void MultiBoardUART::updateTable(binId binaryId, HAL_UART& uart) {
 	RoutingTableEntry newEntry;
 	newEntry.binaryId = binaryId;
 	newEntry.uartGateway = &uart;
-	newEntry.ttl = 120;
+	newEntry.ttlSeconds = 120;
 
 	routingTable[binaryId] = newEntry;
 }
@@ -84,8 +84,7 @@ void MultiBoardUART::init() {
 	rcvLED->init(true, 1, 0);
 	statusLED->init(true, 1, 1);
 
-	uartA.init(115200);
-	uartB.init();
+	for (HAL_UART uart : uartGateways) uart.init();
 }
 
 void MultiBoardUART::run() {
@@ -108,8 +107,8 @@ void MultiBoardUART::run() {
 		std::list<std::map<binId, RoutingTableEntry>::iterator> elementsToRemove;
 
 		for (auto it = routingTable.begin(); it != routingTable.cend(); ++it) {
-			it->second.ttl -= loopInterval;
-			if (it->second.ttl <= 0) elementsToRemove.push_back(it);
+			it->second.ttlSeconds -= loopInterval;
+			if (it->second.ttlSeconds <= 0) elementsToRemove.push_back(it);
 		}
 		for (auto e : elementsToRemove) routingTable.erase(e);
 
@@ -119,26 +118,17 @@ void MultiBoardUART::run() {
 			sendAliveMsg();
 		}
 
-		char rcvBufferA[100];
-		size_t rcvSizeA = receive(uartA, rcvBufferA);
-		if (rcvSizeA != 0) {
-			binId targetAddress;
-			decodeRcvMsg(targetAddress, rcvBufferA);
+		for (HAL_UART uart : uartGateways) {
+			char rcvBufferA[100];
+			size_t rcvSizeA = receive(uart, rcvBufferA);
+			if (rcvSizeA != 0) {
+				binId targetAddress;
+				decodeRcvMsg(targetAddress, rcvBufferA);
 
-			binId nextHopAddress;
-			HAL_UART* nextHopGateway;
-			handleRcvMsg(uartA, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
-		}
-
-		char rcvBufferB[100];
-		size_t rcvSizeB = receive(uartB, rcvBufferB);
-		if (rcvSizeB != 0) {
-			binId targetAddress;
-			decodeRcvMsg(targetAddress, rcvBufferB);
-
-			binId nextHopAddress;
-			HAL_UART* nextHopGateway;
-			handleRcvMsg(uartB, rcvBufferB, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+				binId nextHopAddress;
+				HAL_UART* nextHopGateway;
+				handleRcvMsg(uart, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+			}
 		}
 
 		statusPinVal ^= 1;

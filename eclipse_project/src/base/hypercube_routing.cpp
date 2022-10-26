@@ -6,13 +6,12 @@
  */
 
 #include "hypercube_routing.h"
+#include <stdlib.h>
 
 void HypercubeRouting::sendAliveMsg() {
 
 	/**
 	 * MSG Format:
-	 * Header [SpaceWire header Size] -- Body [dynamic]
-	 *
 	 * Header:
 	 * target address (here alive msg broadcast address) [SpaceWire header Size]
 	 *
@@ -20,19 +19,18 @@ void HypercubeRouting::sendAliveMsg() {
 	 * binary Identifier of self [binId]
 	 */
 
-	void* msg;
+	size_t size = sizeof(binId) * 2;
+	void* msg = malloc(size);
 	// Header: Target Address
 	binId* header = static_cast<binId*>(msg);
 	*header = ALIVE_MSG_BROADCAST_ADDRESS;
 	//Body: own binary Identifier/Address
-	binId* body1 = header + sizeof(binId);
+	binId* body1 = static_cast<binId*>(msg + sizeof(typeof(*header)));
 	*body1 = binaryIdentifier;
 
+	for (HAL_UART uart : uartGateways) send(uart, msg, size);
 
-	int size = sizeof(binId) * 2;
-
-	send(uartA, msg, size);
-	send(uartB, msg, size);
+	free(msg);
 }
 
 void HypercubeRouting::sendToAddress(binId targetAddress, const void* msg, size_t size) {
@@ -64,7 +62,7 @@ void HypercubeRouting::calculateNextHopFromTargetAddress(const binId targetAddre
 	}
 
 	// Find nextHop that matches that difference
-	for (std::list<uint8_t>::iterator it = reachableNextHops.begin(); it != reachableNextHops.end(); ++it) {
+	for (std::list<uint8_t>::iterator it = neighborIds.begin(); it != neighborIds.end(); ++it) {
 		if ((*it >> bitIndex) & 1) {
 			nextHopAddress = *it;
 			nextHopUartGateway = static_cast<RoutingTableEntry>(routingTable[*it]).uartGateway;

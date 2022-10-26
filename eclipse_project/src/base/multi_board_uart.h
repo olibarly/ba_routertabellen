@@ -13,7 +13,7 @@ typedef uint8_t binId;
 struct RoutingTableEntry {
 	binId binaryId;
 	HAL_UART* uartGateway;
-	int64_t ttl;
+	uint8_t ttlSeconds;
 };
 
 
@@ -24,13 +24,12 @@ public:
 protected:
 	static const std::map<const char*, binId>reserved_addresses;
 
-	HAL_UART uartA;
-	HAL_UART uartB;
+	HAL_UART uartGateways[2];
 
 	binId binaryIdentifier;
 
 	std::map<binId, RoutingTableEntry> routingTable;
-	std::list<binId> reachableNextHops;
+	std::list<binId> neighborIds;
 
 	bool checkBinIdValid(binId BinaryId);
 
