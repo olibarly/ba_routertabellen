@@ -1,0 +1,7 @@
+Link State Routing:
+	https://www.javatpoint.com/link-state-routing-algorithm
+	https://www.easy-network.de/Link-State-Routing%20Protokolle.html
+	https://de.wikipedia.org/wiki/Link-State
+
+Flooding:
+	https://de.wikipedia.org/wiki/Flooding-Algorithmus
