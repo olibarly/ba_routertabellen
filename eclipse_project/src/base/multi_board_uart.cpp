@@ -6,6 +6,7 @@
 #include <map>
 #include <list>
 #include <cassert>
+#include <stdlib.h>
 
 
 /** Definition of STATIC member [reserved_addresses]*/
@@ -48,10 +49,10 @@ bool MultiBoardUART::checkBinIdValid(binId binaryId) {
 }
 
 
-void MultiBoardUART::updateTable(binId binaryId, HAL_UART& uart) {
+void MultiBoardUART::updateTable(binId binaryId, HAL_UART* uart) {
 	RoutingTableEntry newEntry;
 	newEntry.binaryId = binaryId;
-	newEntry.uartGateway = &uart;
+	newEntry.uartGateway = uart;
 	newEntry.ttlSeconds = 120;
 
 	routingTable[binaryId] = newEntry;
@@ -61,6 +62,30 @@ void MultiBoardUART::send(HAL_UART& uart, const void* msg, size_t size) {
 	sendLED->setPins(1);
 
 	uart.write(msg, size); // strlen + 1 to ensure null terminator is also sent
+}
+
+void MultiBoardUART::sendAliveMsg() {
+	/**
+	 * MSG Format:
+	 * Header:
+	 * target address (here alive msg broadcast address) [SpaceWire header Size]
+	 *
+	 * Body:
+	 * binary Identifier of self [binId]
+	 */
+
+	size_t size = sizeof(binId) * 2;
+	void* msg = malloc(size);
+	// Header: Target Address
+	binId* header = static_cast<binId*>(msg);
+	*header = ALIVE_MSG_BROADCAST_ADDRESS;
+	//Body: own binary Identifier/Address
+	binId* body1 = static_cast<binId*>(msg + sizeof(typeof(*header)));
+	*body1 = binaryIdentifier;
+
+	for (HAL_UART uart : uartGateways) send(uart, msg, size);
+
+	free(msg);
 }
 
 size_t MultiBoardUART::receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
@@ -119,15 +144,14 @@ void MultiBoardUART::run() {
 		}
 
 		for (HAL_UART uart : uartGateways) {
-			char rcvBufferA[100];
-			size_t rcvSizeA = receive(uart, rcvBufferA);
-			if (rcvSizeA != 0) {
+			void* rcvBuffer;
+			size_t rcvSize = receive(uart, rcvBuffer);
+			if (rcvSize != 0) {
 				binId targetAddress;
-				decodeRcvMsg(targetAddress, rcvBufferA);
+				void* msgBody = rcvBuffer;
+				decodeRcvMsg(targetAddress, msgBody);
 
-				binId nextHopAddress;
-				HAL_UART* nextHopGateway;
-				handleRcvMsg(uart, rcvBufferA, targetAddress, rcvSizeA, nextHopAddress, nextHopGateway);
+				handleRcvMsg(&uart, rcvBuffer, targetAddress, msgBody, rcvSize);
 			}
 		}
 
