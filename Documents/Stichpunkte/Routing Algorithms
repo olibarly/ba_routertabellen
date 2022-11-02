@@ -1,0 +1,29 @@
+Routing Algorithmen:
+	- Hypercube Routing:
+		- single final target Address as header:
+			- simple to set up
+			- each node has to calculate the next gateway on its own
+			- each (bitwise) calculation is rather simple and not demanding
+			- minimal msg overhead (only target address, which every msg has to have)
+			- easy implementation
+			- IDs have to be static or a master node has to be implemented which distributes IDs (would increase risk, since master node would be a single-point-of-failure)
+			- open problems:
+				- what to do with msgs that end up in a dead-end
+				- no method to prevent msgs end up in dead-ends, because the algorithm relies on the hypercube network being intact
+				- what to do when hypercube network is incomplete (Paper: routing on incomplete hypercubes) or not intact anymore			
+						
+		- target Address Chain:
+			- all computation needed for the routing of a msg is done by the source node
+			- either it works the same as the above method
+			- or flooding msgs are needed to let every node know, which nodes and connections are still active
+			- flooding msgs need an algorithm to prevent endless loops
+			- flooding msgs create additional overhead in the network, putting more stress on it
+			- close to real time -> high flooding msg frequency -> high stress on network/nodes vs. far in past -> low flooding msg frequency -> low stress on network/nodes
+			- overhead on each msg (address chain); up to d*l bytes, with d = dimensions of hypercube, l = length of address in bytes
+	- Link-State Routing:
+		- more computational power needed for routing algorithm
+		- more network overhead, because of big flooding msgs sharing list of adjacent nodes with every node
+		- again: flooding msg frequency: real-time vs network overhead
+		- algorithm is made to work with dynamic networks, inactive nodes/connections are no problem (as long as the network is still fully connected and routing tables are up to date (see above))
+		
+	- Distance-Vector Routing:
