@@ -12,9 +12,8 @@
 
 #include "../hypercubeRouting/hr_base.h"
 
-class HypercubeRouting : MultiBoardUART {
+class HRLogicalAddressing : HypercubeRouting {
 private:
-	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) override;
 	/**
 	 * @param
 	 * [size] includes header (targetAddress) and msg (body)

@@ -7,18 +7,9 @@
 
 #include "../hypercubeRouting/hr_logicalAddressing.h"
 
-void HypercubeRouting::sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) {
-	HAL_UART* nextHopGateway;
-	binId nextHopAddress;
-	size_t addressingLength;
-
-	calculateAddressing(targetAddress, nextHopGateway, &nextHopAddress, &addressingLength);
-	send(*nextHopGateway, msgBody, msgBodySize);
-}
-
-void HypercubeRouting::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
+void HRLogicalAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
 	if (targetAddress == ALIVE_MSG_BROADCAST_ADDRESS) {
-		updateTable(static_cast<binId*>(msgBody)[0], uart);
+		handleAliveMsg(uart, msg);
 	} else if (targetAddress != binaryIdentifier) {
 		HAL_UART* nextHopGateway;
 		binId nextHopAddress;
@@ -39,7 +30,7 @@ void HypercubeRouting::handleRcvMsg(HAL_UART* uart, void* msg, const binId targe
 	}
 }
 
-void HypercubeRouting::calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength) {
+void HRLogicalAddressing::calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength) {
 	*addressingLength = sizeof(binId);
 
 	binId diff = targetAddress ^ binaryIdentifier;

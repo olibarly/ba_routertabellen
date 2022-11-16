@@ -13,11 +13,10 @@
 
 #include "../hypercubeRouting/hr_base.h"
 
-class HypercubeRouting2 : MultiBoardUART {
+class HRPathAddressing : HypercubeRouting {
 private:
 	std::map<binId, RoutingTableEntry> routingTable;
 
-	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) override;
 	void forwardMsg(const void* msg, size_t size);
 
 	void handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) override;

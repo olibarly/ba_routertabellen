@@ -39,7 +39,7 @@ bool strEqual(const char* a, const char* b) {
 }
 
 
-MultiBoardUART::MultiBoardUART(binId binaryId) : StaticThread(), uartGateways{uartIDX1, uartIDX6}{
+HypercubeRouting::HypercubeRouting(binId binaryId) : StaticThread(), uartGateways{uartIDX1, uartIDX6}{
 	assert(checkBinIdValid(binaryId));
 	binaryIdentifier = binaryId;
 
@@ -48,7 +48,7 @@ MultiBoardUART::MultiBoardUART(binId binaryId) : StaticThread(), uartGateways{ua
 	statusLED = &blueLED;
 }
 
-bool MultiBoardUART::checkBinIdValid(binId binaryId) {
+bool HypercubeRouting::checkBinIdValid(binId binaryId) {
 
 	for (std::map<const char*, binId>::const_iterator it = reserved_addresses.begin(); it != reserved_addresses.end(); ++it) {
 		if (binaryId == it->second) return false;
@@ -58,17 +58,17 @@ bool MultiBoardUART::checkBinIdValid(binId binaryId) {
 }
 
 
-void MultiBoardUART::updateTable(binId binaryId, HAL_UART* uart) {
-	routingTable[binaryId] = RoutingTableEntry(binaryId, uart);
+void HypercubeRouting::updateTable(binId binaryId, RoutingTableEntry routingTableEntry) {
+	routingTable[binaryId] = routingTableEntry;
 }
 
-void MultiBoardUART::send(HAL_UART& uart, const void* msg, size_t size) {
+void HypercubeRouting::send(HAL_UART& uart, const void* msg, size_t size) {
 	sendLED->setPins(1);
 
 	uart.write(msg, size); // strlen + 1 to ensure null terminator is also sent
 }
 
-void MultiBoardUART::sendAliveMsg() {
+void HypercubeRouting::sendAliveMsg() {
 	/**
 	 * MSG Format:
 	 * Header:
@@ -92,7 +92,38 @@ void MultiBoardUART::sendAliveMsg() {
 	free(msg);
 }
 
-size_t MultiBoardUART::receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
+void HypercubeRouting::sendToAddress(binId targetAddress, const void* msgBody, size_t msgSize) {
+	// check if address is in routing table
+	std::map<binId, RoutingTableEntry>::iterator routingTableMapEntry = routingTable.find(targetAddress);
+	RoutingTableEntry routingData;
+
+	// if not: calculate addressing, updateTable
+	if (routingTableMapEntry == routingTable.end()) {
+		HAL_UART* nextHopUartGateway;
+		binId* addressing;
+		size_t addressingLength;
+		calculateAddressing(targetAddress, nextHopUartGateway, addressing, &addressingLength);
+		updateTable(targetAddress, RoutingTableEntry(targetAddress, addressing, addressingLength, nextHopUartGateway));
+	} else { //otherwise: just use data from table
+		routingData = routingTableMapEntry->second;
+	}
+
+	size_t size = sizeof(binId) * routingData.addressingLength + msgSize;
+
+	void* msg = malloc(size);
+
+	binId* addressing = static_cast<binId*>(msg);
+	memcpy(addressing, routingData.addressing, routingData.addressingLength);
+
+	void* body = msg + sizeof(typeof(*addressing)) * routingData.addressingLength;
+	memcpy(body, msg, msgSize);
+
+	send(*routingData.uartGateway, msg, size);
+
+	free(msg);
+}
+
+size_t HypercubeRouting::receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
 	if (uart.isDataReady()) {
 		rcvLED->setPins(1);
 
@@ -103,12 +134,18 @@ size_t MultiBoardUART::receive(HAL_UART& uart, void* rcvBuffer, const size_t max
 	return 0;
 }
 
-void MultiBoardUART::decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody) {
+void HypercubeRouting::decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody) {
 	targetAddress = *static_cast<binId*>(msg);
 	msgBody = static_cast<binId*>(msg) + 1;
 }
 
-void MultiBoardUART::init() {
+void HypercubeRouting::handleAliveMsg(HAL_UART* uart, void* msgBody) {
+	binId sourceAddress = static_cast<binId*>(msgBody)[0];
+	// calculation of addressing not necessery, since source node is adjacent to this node
+	updateTable(sourceAddress, RoutingTableEntry(sourceAddress, uart));
+}
+
+void HypercubeRouting::init() {
 	sendLED->init(true, 1, 0);
 	rcvLED->init(true, 1, 0);
 	statusLED->init(true, 1, 1);
@@ -116,7 +153,7 @@ void MultiBoardUART::init() {
 	for (HAL_UART uart : uartGateways) uart.init();
 }
 
-void MultiBoardUART::run() {
+void HypercubeRouting::run() {
 	int sendIntervalCounter = 0;
 	int sendAliveIntervalCounter = 0;
 

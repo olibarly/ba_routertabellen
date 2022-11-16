@@ -18,6 +18,13 @@ typedef uint8_t binId;
 #define FLOODING_MSG_BROADCAST_ADDRESS	0b11111110
 
 
+enum nodeState{
+	SAFE,
+	FAULTY,
+	UNSAFE,
+	STRONGLY_UNSAFE
+};
+
 struct UART_Gateway {
 	uint8_t id;
 	HAL_UART hal_uart;
@@ -26,17 +33,15 @@ struct UART_Gateway {
 struct RoutingTableEntry {
 	RoutingTableEntry();
 	RoutingTableEntry(binId t, HAL_UART* u) {
-		RoutingTableEntry(t, u, 60);
+		RoutingTableEntry(t, &t, 1, u);
 	}
-	RoutingTableEntry(binId t, HAL_UART* u, uint8_t ttl) {
-		RoutingTableEntry(t, &t, 1, u, ttl);
-	}
-	RoutingTableEntry(binId t, binId* a, size_t l, HAL_UART* u, uint8_t ttl) {
+	RoutingTableEntry(binId t, binId* a, size_t l, HAL_UART* u, uint8_t ttl = 60) {
 		targetAddress = t;
 		a = a;
 		l = l;
 		uartGateway = u;
 		ttlSeconds = ttl;
+		state = SAFE;
 	}
 	virtual ~RoutingTableEntry() {};
 
@@ -49,12 +54,13 @@ struct RoutingTableEntry {
 	size_t addressingLength;
 	HAL_UART* uartGateway;
 	uint8_t ttlSeconds;
+	nodeState state;
 };
 
 
-class MultiBoardUART : StaticThread<> {
+class HypercubeRouting : StaticThread<> {
 public:
-	MultiBoardUART(binId binaryId); //allows up to 256 different IDs, with 256 being used as a "broadcast" address
+	HypercubeRouting(binId binaryId); //allows up to 256 different IDs, with 256 being used as a "broadcast" address
 
 protected:
 	static const std::map<const char*, binId> reserved_addresses;
@@ -68,12 +74,12 @@ protected:
 
 	bool checkBinIdValid(binId BinaryId);
 
-	void updateTable(binId binaryId, HAL_UART* uart);
+	void updateTable(binId binaryId, RoutingTableEntry routingTableEntry);
 	virtual void calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength);
 
 	void send(HAL_UART& uart, const void* msg, size_t size);
 	void sendAliveMsg();
-	virtual void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize);
+	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize);
 
 	size_t receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen = 100);
 	void decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody);
@@ -81,6 +87,7 @@ protected:
 	* @param size includes header (targetAddress) and msgBody (body)
 	*/
 	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size);
+	void handleAliveMsg(HAL_UART* uart, void* msgBody);
 
 private:
 	HAL_GPIO* sendLED;
