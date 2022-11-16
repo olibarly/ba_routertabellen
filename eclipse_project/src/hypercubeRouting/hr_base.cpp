@@ -1,4 +1,13 @@
-#include "multi_board_uart.h"
+/*
+ * hr_base.cpp
+ *
+ *  Created on: Nov 16, 2022
+ *      Author: oliver
+ */
+
+
+
+#include "../hypercubeRouting/hr_base.h"
 
 #include "rodos.h"
 #include "../misc/LED.h"
@@ -50,12 +59,7 @@ bool MultiBoardUART::checkBinIdValid(binId binaryId) {
 
 
 void MultiBoardUART::updateTable(binId binaryId, HAL_UART* uart) {
-	RoutingTableEntry newEntry;
-	newEntry.binaryId = binaryId;
-	newEntry.uartGateway = uart;
-	newEntry.ttlSeconds = 120;
-
-	routingTable[binaryId] = newEntry;
+	routingTable[binaryId] = RoutingTableEntry(binaryId, uart);
 }
 
 void MultiBoardUART::send(HAL_UART& uart, const void* msg, size_t size) {
@@ -99,9 +103,9 @@ size_t MultiBoardUART::receive(HAL_UART& uart, void* rcvBuffer, const size_t max
 	return 0;
 }
 
-void MultiBoardUART::decodeRcvMsg(binId& targetAddress, void* msg) {
+void MultiBoardUART::decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody) {
 	targetAddress = *static_cast<binId*>(msg);
-	msg = static_cast<binId*>(msg) + 1;
+	msgBody = static_cast<binId*>(msg) + 1;
 }
 
 void MultiBoardUART::init() {
@@ -148,8 +152,8 @@ void MultiBoardUART::run() {
 			size_t rcvSize = receive(uart, rcvBuffer);
 			if (rcvSize != 0) {
 				binId targetAddress;
-				void* msgBody = rcvBuffer;
-				decodeRcvMsg(targetAddress, msgBody);
+				void* msgBody;
+				decodeRcvMsg(rcvBuffer, targetAddress, msgBody);
 
 				handleRcvMsg(&uart, rcvBuffer, targetAddress, msgBody, rcvSize);
 			}
@@ -160,3 +164,4 @@ void MultiBoardUART::run() {
 		sendAliveInterval++;
 	}
 }
+

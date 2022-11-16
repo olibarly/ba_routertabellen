@@ -1,5 +1,12 @@
-#ifndef MULTI_BOARD_UART
-#define MULTI_BOARD_UART
+/*
+ * hr_base.h
+ *
+ *  Created on: Nov 16, 2022
+ *      Author: oliver
+ */
+
+#ifndef SRC_HYPERCUBEROUTING_HR_BASE_H_
+#define SRC_HYPERCUBEROUTING_HR_BASE_H_
 
 #include "rodos.h"
 #include <map>
@@ -17,7 +24,22 @@ struct UART_Gateway {
 };
 
 struct RoutingTableEntry {
+	RoutingTableEntry();
+	RoutingTableEntry(binId b, HAL_UART* u) {
+		binaryId = b;
+		uartGateway = u;
+		ttlSeconds = 60;
+	}
+	RoutingTableEntry(binId b, HAL_UART* u, uint8_t ttl) {
+		binaryId = b;
+		uartGateway = u;
+		ttlSeconds = ttl;
+	}
 	virtual ~RoutingTableEntry() {};
+
+	void resetTTL() {
+		ttlSeconds = 60;
+	}
 
 	binId binaryId;
 	HAL_UART* uartGateway;
@@ -46,10 +68,10 @@ protected:
 
 	void send(HAL_UART& uart, const void* msg, size_t size);
 	void sendAliveMsg();
-	virtual void sendToAddress(binId targetAddress, const void* msg, size_t msgSize);
+	virtual void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize);
 
 	size_t receive(HAL_UART& uart, void* rcvBuffer, const size_t maxLen = 100);
-	void decodeRcvMsg(binId& targetAddress, void* msg);
+	void decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody);
 	/**
 	* @param size includes header (targetAddress) and msgBody (body)
 	*/
@@ -64,4 +86,5 @@ private:
 };
 
 
-#endif /* MULTI_BOARD_UART */
+
+#endif /* SRC_HYPERCUBEROUTING_HR_BASE_H_ */

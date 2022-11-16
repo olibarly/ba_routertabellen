@@ -5,12 +5,13 @@
  *      Author: oliver
  */
 
-#ifndef SRC_BASE_HYPERCUBE_ROUTING2_H_
-#define SRC_BASE_HYPERCUBE_ROUTING2_H_
+#ifndef SRC_HYPERCUBEROUTING_HR_PATHADDRESSING_H_
+#define SRC_HYPERCUBEROUTING_HR_PATHADDRESSING_H_
 
 
-#include "multi_board_uart.h"
 #include <list>
+
+#include "../hypercubeRouting/hr_base.h"
 
 
 struct FloodingMsgData{
@@ -26,6 +27,7 @@ struct FloodingMsgData{
 
 struct HypercubeRouting2RoutingTableEntry : RoutingTableEntry {
 	std::list<binId> binIdChain;
+	uint8_t ttlSeconds;
 };
 
 class HypercubeRouting2 : MultiBoardUART {
@@ -36,8 +38,8 @@ private:
 	std::list<FloodingMsgData> floodingmsgs;
 
 	void sendFloodingMsg();
-	void sendToAddress(binId targetAddress, const void* msg, size_t msgSize) override;
-	void forwardMsg(const void* msg, size_t msgSize);
+	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) override;
+	void forwardMsg(const void* msg, size_t size);
 	void forwardFloodingMsg(HAL_UART* receivingGateway, const void* msg, size_t size);
 
 	void handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) override;
@@ -46,4 +48,4 @@ private:
 };
 
 
-#endif /* SRC_BASE_HYPERCUBE_ROUTING2_H_ */
+#endif /* SRC_HYPERCUBEROUTING_HR_PATHADDRESSING_H_ */

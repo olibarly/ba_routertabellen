@@ -5,14 +5,14 @@
  *      Author: oliver
  */
 
-#include "hypercube_routing.h"
+#include "../hypercubeRouting/hr_logicalAddressing.h"
 
-void HypercubeRouting::sendToAddress(binId targetAddress, const void* msg, size_t msgSize) {
+void HypercubeRouting::sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) {
 	HAL_UART* nextHopGateway;
 	binId nextHopAddress;
 
 	calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
-	send(*nextHopGateway, msg, msgSize);
+	send(*nextHopGateway, msgBody, msgBodySize);
 }
 
 void HypercubeRouting::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
@@ -21,7 +21,16 @@ void HypercubeRouting::handleRcvMsg(HAL_UART* uart, void* msg, const binId targe
 	} else if (targetAddress != binaryIdentifier) {
 		HAL_UART* nextHopGateway;
 		binId nextHopAddress;
-		calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
+
+		std::map<binId, RoutingTableEntry>::iterator it = routingTable.find(nextHopAddress);
+		if (it != routingTable.end()) { // Address already exists in routing table
+			nextHopGateway = it->second.uartGateway;
+			it->second.resetTTL(); // reset TTL
+		} else { // Address does not exist in routing table
+			calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
+			routingTable.insert({nextHopAddress, RoutingTableEntry(nextHopAddress, nextHopGateway)});
+		}
+
 		send(*nextHopGateway, msgBody, size);
 	} else {
 	}

@@ -6,10 +6,12 @@
  */
 
 
-#include "hypercube_routing2.h"
+#include "../hypercubeRouting/hr_pathAddressing.h"
+
 #include "hal/hal_uart.cpp"
 #include <stdlib.h>
 
+/*
 void HypercubeRouting2::sendFloodingMsg() {
 	size_t size = sizeof(binId) * (2 + neighborIds.size()) + sizeof(uint8_t);
 	void* msg = malloc(size);
@@ -37,6 +39,7 @@ void HypercubeRouting2::sendFloodingMsg() {
 
 	free(msg);
 }
+*/
 
 void HypercubeRouting2::sendToAddress(binId targetAddress, const void* msg, size_t msgSize) {
 	HypercubeRouting2RoutingTableEntry routingData = routingTable[targetAddress];
@@ -58,24 +61,26 @@ void HypercubeRouting2::sendToAddress(binId targetAddress, const void* msg, size
 	free(msgAll);
 }
 
-void HypercubeRouting2::forwardMsg(const void* msg, size_t msgSize) {
+void HypercubeRouting2::forwardMsg(const void* msg, size_t size) {
 	binId targetAddress = *static_cast<const binId*>(msg);
 
-	send(*neighborIds[targetAddress], msg, msgSize);
+	send(*neighborIds[targetAddress], msg, size);
 }
 
-void HypercubeRouting2::forwardFloodingMsg(HAL_UART* receivingGateway, const void* msg, size_t size) {
+/*
+ * void HypercubeRouting2::forwardFloodingMsg(HAL_UART* receivingGateway, const void* msg, size_t size) {
 	for (HAL_UART uart : uartGateways) {
 		if (&uart != receivingGateway) send(uart, msg, size); // Don't know if inequality check is really working here, but since we're only working with pointers, receiving Gateway should point to HAL_UART stored in uartGateways
 	}
 }
+*/
 
 void HypercubeRouting2::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
 	if (targetAddress == ALIVE_MSG_BROADCAST_ADDRESS) {
 		// extract source address; refresh ttl in corresponding routing table entry
 		binId sourceAddress = *static_cast<binId*>(msgBody);
 		routingTable[sourceAddress].ttlSeconds = 60;
-	} else if (targetAddress == FLOODING_MSG_BROADCAST_ADDRESS) {
+	} /*else if (targetAddress == FLOODING_MSG_BROADCAST_ADDRESS) {
 		// check if sourceID - floodingID combo already known; respectively drop or forward Msg (but not via receiving gateway)
 		binId sourceId = *static_cast<binId*>(msgBody);
 		uint8_t floodingId = *static_cast<uint8_t*>(msgBody + sizeof(typeof(sourceId)));
@@ -87,7 +92,7 @@ void HypercubeRouting2::handleRcvMsg(HAL_UART* uart, void* msg, const binId targ
 		floodingmsgs.push_back(FloodingMsgData(sourceId, floodingId));
 		// TODO: Flooding Msg Data handling
 		forwardFloodingMsg(uart, msg, size);
-	} else if (targetAddress == binaryIdentifier) {
+	}*/ else if (targetAddress == binaryIdentifier) {
 		// forward Msg to topic (?) to further handle internally
 	} else {
 		forwardMsg(msgBody, size);

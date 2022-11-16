@@ -5,16 +5,16 @@
  *      Author: oliver
  */
 
-#ifndef SRC_BASE_HYPERCUBE_ROUTING_H_
-#define SRC_BASE_HYPERCUBE_ROUTING_H_
+#ifndef SRC_HYPERCUBEROUTING_HR_LOGICALADDRESSING_H_
+#define SRC_HYPERCUBEROUTING_HR_LOGICALADDRESSING_H_
 
 
 
-#include "multi_board_uart.h"
+#include "../hypercubeRouting/hr_base.h"
 
 class HypercubeRouting : MultiBoardUART {
 private:
-	void sendToAddress(binId targetAddress, const void* msg, size_t msgSize) override;
+	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) override;
 	/**
 	 * @param
 	 * [size] includes header (targetAddress) and msg (body)
@@ -26,4 +26,4 @@ private:
 
 
 
-#endif /* SRC_BASE_HYPERCUBE_ROUTING_H_ */
+#endif /* SRC_HYPERCUBEROUTING_HR_LOGICALADDRESSING_H_ */
