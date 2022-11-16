@@ -25,13 +25,16 @@ struct UART_Gateway {
 
 struct RoutingTableEntry {
 	RoutingTableEntry();
-	RoutingTableEntry(binId b, HAL_UART* u) {
-		binaryId = b;
-		uartGateway = u;
-		ttlSeconds = 60;
+	RoutingTableEntry(binId t, HAL_UART* u) {
+		RoutingTableEntry(t, u, 60);
 	}
-	RoutingTableEntry(binId b, HAL_UART* u, uint8_t ttl) {
-		binaryId = b;
+	RoutingTableEntry(binId t, HAL_UART* u, uint8_t ttl) {
+		RoutingTableEntry(t, &t, 1, u, ttl);
+	}
+	RoutingTableEntry(binId t, binId* a, size_t l, HAL_UART* u, uint8_t ttl) {
+		targetAddress = t;
+		a = a;
+		l = l;
 		uartGateway = u;
 		ttlSeconds = ttl;
 	}
@@ -41,7 +44,9 @@ struct RoutingTableEntry {
 		ttlSeconds = 60;
 	}
 
-	binId binaryId;
+	binId targetAddress;
+	binId* addressing;
+	size_t addressingLength;
 	HAL_UART* uartGateway;
 	uint8_t ttlSeconds;
 };
@@ -64,7 +69,7 @@ protected:
 	bool checkBinIdValid(binId BinaryId);
 
 	void updateTable(binId binaryId, HAL_UART* uart);
-	virtual void calculateNextHopFromTargetAddress(const binId targetAddress, HAL_UART* nextHopUartGateway, binId nextHopAddress);
+	virtual void calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength);
 
 	void send(HAL_UART& uart, const void* msg, size_t size);
 	void sendAliveMsg();

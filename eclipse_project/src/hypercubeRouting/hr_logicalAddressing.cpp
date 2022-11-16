@@ -10,8 +10,9 @@
 void HypercubeRouting::sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize) {
 	HAL_UART* nextHopGateway;
 	binId nextHopAddress;
+	size_t addressingLength;
 
-	calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
+	calculateAddressing(targetAddress, nextHopGateway, &nextHopAddress, &addressingLength);
 	send(*nextHopGateway, msgBody, msgBodySize);
 }
 
@@ -27,7 +28,9 @@ void HypercubeRouting::handleRcvMsg(HAL_UART* uart, void* msg, const binId targe
 			nextHopGateway = it->second.uartGateway;
 			it->second.resetTTL(); // reset TTL
 		} else { // Address does not exist in routing table
-			calculateNextHopFromTargetAddress(targetAddress, nextHopGateway, nextHopAddress);
+			binId nextHopAddress;
+			size_t length;
+			calculateAddressing(targetAddress, nextHopGateway, &nextHopAddress, &length);
 			routingTable.insert({nextHopAddress, RoutingTableEntry(nextHopAddress, nextHopGateway)});
 		}
 
@@ -36,7 +39,9 @@ void HypercubeRouting::handleRcvMsg(HAL_UART* uart, void* msg, const binId targe
 	}
 }
 
-void HypercubeRouting::calculateNextHopFromTargetAddress(const binId targetAddress, HAL_UART* nextHopUartGateway, binId nextHopAddress) {
+void HypercubeRouting::calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength) {
+	*addressingLength = sizeof(binId);
+
 	binId diff = targetAddress ^ binaryIdentifier;
 
 	// Find first bit difference from back (LSB)
@@ -49,7 +54,7 @@ void HypercubeRouting::calculateNextHopFromTargetAddress(const binId targetAddre
 	// Find nextHop that matches that difference
 	for (std::map<binId, HAL_UART*>::iterator it = neighborIds.begin(); it != neighborIds.end(); ++it) {
 		if ((it->first >> bitIndex) & 1) {
-			nextHopAddress = it->first;
+			*addressing = it->first;
 			nextHopUartGateway = static_cast<RoutingTableEntry>(routingTable[it->first]).uartGateway;
 			break;
 		}
