@@ -18,25 +18,8 @@
 #include <stdlib.h>
 
 
-/** Definition of STATIC member [reserved_addresses]*/
-const std::map<const char*, binId> reserved_addresses  = {
-		{"ALIVE_MSG_BROADCAST_ADDRESS", ALIVE_MSG_BROADCAST_ADDRESS}
-	};
-
-
 HAL_UART uartIDX1(UART_IDX1); // working: UART_IDX1, UARTIDX2, UART_IDX6
 HAL_UART uartIDX6(UART_IDX6);
-
-
-bool strEqual(const char* a, const char* b) {
-	if (strlen(a) == strlen(b)) {
-		for (int i = 0; a[i]; i++) {
-			if (a[i] != b[i]) return false; // different content
-		}
-		return true; // strings are equal
-	}
-	return false; // different length
-}
 
 
 HypercubeRouting::HypercubeRouting(binId binaryId) : StaticThread(), uartGateways{uartIDX1, uartIDX6}{
@@ -46,15 +29,12 @@ HypercubeRouting::HypercubeRouting(binId binaryId) : StaticThread(), uartGateway
 	sendLED = &greenLED;
 	rcvLED = &redLED;
 	statusLED = &blueLED;
+
+	// TODO: Fault Tolerance: initialize NodeState Maps (issue #21)
 }
 
 bool HypercubeRouting::checkBinIdValid(binId binaryId) {
-
-	for (std::map<const char*, binId>::const_iterator it = reserved_addresses.begin(); it != reserved_addresses.end(); ++it) {
-		if (binaryId == it->second) return false;
-	}
-
-	return true;
+	return binaryId != BROADCAST_ADDRESS;
 }
 
 
@@ -72,20 +52,24 @@ void HypercubeRouting::sendAliveMsg() {
 	/**
 	 * MSG Format:
 	 * Header:
-	 * target address (here alive msg broadcast address) [SpaceWire header Size]
+	 * target address (here broadcast address) [SpaceWire header Size]
 	 *
 	 * Body:
+	 * Broadcast Message Identifier (ALIVE)
 	 * binary Identifier of self [binId]
 	 */
 
-	size_t size = sizeof(binId) * 2;
+	size_t size = sizeof(binId) * 2 + sizeof(broadcastId);
 	void* msg = malloc(size);
 	// Header: Target Address
 	binId* header = static_cast<binId*>(msg);
-	*header = ALIVE_MSG_BROADCAST_ADDRESS;
-	//Body: own binary Identifier/Address
-	binId* body1 = static_cast<binId*>(msg + sizeof(typeof(*header)));
-	*body1 = binaryIdentifier;
+	*header = BROADCAST_ADDRESS;
+	// Body:
+	broadcastId* body1 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)));
+	*body1 = ALIVE;
+	// own binary Identifier/Address
+	binId* body2 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
+	*body2 = binaryIdentifier;
 
 	for (HAL_UART uart : uartGateways) send(uart, msg, size);
 

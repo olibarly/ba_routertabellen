@@ -15,11 +15,11 @@
 void HRPathAddressing::forwardMsg(const void* msg, size_t size) {
 	binId targetAddress = *static_cast<const binId*>(msg);
 
-	send(*neighborIds[targetAddress], msg, size);
+	send(*adjacentNodes[targetAddress].uartGateway, msg, size);
 }
 
 void HRPathAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
-	if (targetAddress == ALIVE_MSG_BROADCAST_ADDRESS) {
+	if (targetAddress == BROADCAST_ADDRESS) {
 		handleAliveMsg(uart, msg);
 	} else if (targetAddress == binaryIdentifier) {
 		// forward Msg to topic (?) to further handle internally

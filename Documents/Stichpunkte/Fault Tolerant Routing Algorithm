@@ -1,0 +1,18 @@
+A Fault Tolerant Routing Strategy in Hypercube Multicomputers - Chiu (page 7)
+
+ROUTE Algorithm:
+if safe or ordinary unsafe node on shortest path exists, route to that
+otherwise if current node is strongly unsafe or distance to target is <= 2
+	if strongly unsafe node on shortest path exists, route to that
+otherwise if safe node not on shortest path exists route to that
+otherwise if unsafe node not on shortest path exists route to that
+
+
+Identify Unsafe Algorithm:
+Safe:			Node with less than 2 faulty neighbors and less than 3 faulty or unsafe neighbors
+Unsafe:			Node with 2 or more faulty neighbors or 3 or more faulty or unsafe neighbors
+Strongly Unsafe:	Node with no safe neighbor, and therefore only unsafe, strongly unsafe or faulty neighbors
+Faulty:			Node not sending any AliveMsg, either because there is no node or because node is faulty
+
+
+TODO: Map initialization
