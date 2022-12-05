@@ -140,38 +140,5 @@ void HRLogicalAddressing::calculateNodeState(HAL_UART* uartGateway, void* msgBod
 }
 
 void HRLogicalAddressing::sendNodeStateMsg() {
-
-	/**
-	 * MSG Format:
-	 * Header:
-	 * target address (here broadcast address) [SpaceWire header Size]
-	 *
-	 * Body:
-	 * Broadcast Message Identifier (NODE_STATE)
-	 * binary Identifier of self [binId]
-	 */
-
-	size_t size = sizeof(binId) * 2 + sizeof(broadcastId) + sizeof(nodeStateUnderlying);
-	void* msg = malloc(size);
-
-	// Header: Target Address
-	binId* header = static_cast<binId*>(msg);
-	*header = BROADCAST_ADDRESS;
-
-	// Body:
-	// broadcast msg identifier
-	broadcastId* body1 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)));
-	*body1 = NODE_STATE;
-	// own binary Identifier/Address
-	binId* body2 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
-	*body2 = binaryIdentifier;
-	// node State
-	binId* body3 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)) + sizeof(typeof(body2)));
-	*body3 = state;
-
-
-	for (HAL_UART uart : uartGateways) send(uart, msg, size);
-
-	free(msg);
-
+	nodeStateThread.resume();
 }

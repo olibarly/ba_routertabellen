@@ -10,9 +10,9 @@
 
 
 
-#include "../hypercubeRouting/hr_base.h"
+#include "hr_mainThread_base.h"
 
-class HRLogicalAddressing : HypercubeRouting {
+class HRLogicalAddressing : HypercubeRoutingMainThread {
 private:
 	/**
 	 * @param
