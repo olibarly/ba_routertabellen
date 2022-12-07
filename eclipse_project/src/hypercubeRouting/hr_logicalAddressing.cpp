@@ -23,7 +23,7 @@ void HRLogicalAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId ta
 		}
 
 		// if msg has expected counter value or no value is present in the map, update next expected counter value
-		expectedFloodingMsgCounters[bcId][nodeId] = counter + 1;
+		expectedFloodingMsgCounters[bcId][nodeId] = counter + 1;s
 
 		switch(static_cast<BroadcastIdentifier*>(msg)[0]) {
 		case ALIVE:
