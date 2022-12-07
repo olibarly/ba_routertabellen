@@ -26,7 +26,7 @@ void HypercubeRoutingNodeStateThread::sendNodeStateMsg() {
 	 * binary Identifier of self [binId]
 	 */
 
-	size_t size = sizeof(binId) * 2 + sizeof(broadcastId) + sizeof(nodeStateUnderlying);
+	size_t size = sizeof(binId) * 2 + sizeof(broadcastIdUnderlyingType) + sizeof(nodeStateUnderlyingType);
 	void* msg = malloc(size);
 
 	// Header: Target Address
@@ -35,10 +35,10 @@ void HypercubeRoutingNodeStateThread::sendNodeStateMsg() {
 
 	// Body:
 	// broadcast msg identifier
-	broadcastId* body1 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)));
+	broadcastIdUnderlyingType* body1 = static_cast<broadcastIdUnderlyingType*>(msg + sizeof(typeof(*header)));
 	*body1 = NODE_STATE;
 	// floodingMsg counters
-	floodingMsgCounter* body2 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
+	floodingMsgCounter* body2 = static_cast<broadcastIdUnderlyingType*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
 	*body2 = nodeStateMsgCounter;
 	// own binary Identifier/Address
 	binId* body3 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)) + sizeof(typeof(body2)));

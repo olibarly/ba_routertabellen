@@ -10,20 +10,20 @@
 
 void HRLogicalAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
 	if (targetAddress == BROADCAST_ADDRESS) {
-		broadcastId* bcId = msgBody;
-		floodingMsgCounter* counter = msgBody + sizeof(broadcastId);
-		binId* nodeId = msgBody + sizeof(broadcastId) + sizeof(floodingMsgCounter);
+		BroadcastIdentifier* bcId = static_cast<BroadcastIdentifier*>(msgBody);
+		floodingMsgCounter* counter = static_cast<floodingMsgCounter*>(msgBody + sizeof(BroadcastIdentifier));
+		binId* nodeId = static_cast<binId*>(msgBody + sizeof(BroadcastIdentifier) + sizeof(floodingMsgCounter));
 
-		std::map<broadcastId, std::map<binId, floodingMsgCounter>>::iterator it1 = expectedFloodingMsgCounters.find(bcId);
+		std::map<BroadcastIdentifier, std::map<binId, floodingMsgCounter>>::iterator it1 = expectedFloodingMsgCounters.find(*bcId);
 		if (it1 != expectedFloodingMsgCounters.end()) {
-			std::map<binId, floodingMsgCounter>::iterator it2 = it1->second.find(binId);
+			std::map<binId, floodingMsgCounter>::iterator it2 = it1->second.find(*nodeId);
 			if (it2 != it1->second.end()) {
-				if (it2->second != counter)	return; // msg does not have the expected counter value and will therefore be ignored
+				if (it2->second != *counter)	return; // msg does not have the expected counter value and will therefore be ignored
 			}
 		}
 
 		// if msg has expected counter value or no value is present in the map, update next expected counter value
-		expectedFloodingMsgCounters[bcId][nodeId] = counter + 1;s
+		expectedFloodingMsgCounters[*bcId][*nodeId] = *counter + 1;
 
 		switch(static_cast<BroadcastIdentifier*>(msg)[0]) {
 		case ALIVE:
@@ -128,8 +128,8 @@ void HRLogicalAddressing::calculateAddressing(const binId targetAddress, HAL_UAR
 }
 
 void HRLogicalAddressing::calculateNodeState(HAL_UART* uartGateway, void* msgBody) {
-	binId nodeId = *static_cast<binId*>(msgBody + sizeof(broadcastId));
-	NodeState newState = *static_cast<NodeState*>(msgBody + sizeof(broadcastId) + sizeof(binId));
+	binId nodeId = *static_cast<binId*>(msgBody + sizeof(broadcastIdUnderlyingType));
+	NodeState newState = *static_cast<NodeState*>(msgBody + sizeof(broadcastIdUnderlyingType) + sizeof(binId));
 
 	NodeState oldState;
 	std::map<binId, AdjacentNode>::iterator adjacentNodeIt = adjacentNodes.find(nodeId);

@@ -97,9 +97,10 @@ void HypercubeRoutingMainThread::sendToAddress(binId targetAddress, const void* 
 
 void HypercubeRoutingMainThread::forwardFloodingMsg(void* msg, size_t msgSize, HAL_UART* incomingUartGateway) {
 	for (HAL_UART uart : uartGateways) {
-		if (uart != *incomingUartGateway) {
+		// TODO: how to compare HAL_UART objects
+		//if (uart != *incomingUartGateway) {
 			send(uart, msg, msgSize);
-		}
+		//}
 	}
 }
 

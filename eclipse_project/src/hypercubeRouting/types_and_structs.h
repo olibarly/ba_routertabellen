@@ -12,17 +12,17 @@
 
 
 typedef uint8_t binId;
-typedef uint8_t broadcastId;
+typedef uint8_t broadcastIdUnderlyingType;
 typedef uint8_t floodingMsgCounter;
-typedef uint8_t nodeStateUnderlying;
+typedef uint8_t nodeStateUnderlyingType;
 #define BROADCAST_ADDRESS		0b11111111
 
-enum BroadcastIdentifier : broadcastId {
+enum BroadcastIdentifier : broadcastIdUnderlyingType {
 	ALIVE,
 	NODE_STATE
 };
 
-enum NodeState : nodeStateUnderlying {
+enum NodeState : nodeStateUnderlyingType {
 	SAFE,
 	FAULTY,
 	UNSAFE,

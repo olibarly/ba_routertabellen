@@ -27,7 +27,7 @@ void HypercubeRoutingAliveMsgThread::sendAliveMsg() {
 	 * binary Identifier of self [binId]
 	 */
 
-	size_t size = sizeof(binId) * 2 + sizeof(broadcastId);
+	size_t size = sizeof(binId) * 2 + sizeof(broadcastIdUnderlyingType);
 	void* msg = malloc(size);
 	// Header: Target Address
 	binId* header = static_cast<binId*>(msg);
@@ -35,10 +35,10 @@ void HypercubeRoutingAliveMsgThread::sendAliveMsg() {
 
 	// Body:
 	// Broadcast Msg Id
-	broadcastId* body1 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)));
+	broadcastIdUnderlyingType* body1 = static_cast<broadcastIdUnderlyingType*>(msg + sizeof(typeof(*header)));
 	*body1 = ALIVE;
 	// AliveMsg Counter
-	floodingMsgCounter* body2 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
+	floodingMsgCounter* body2 = static_cast<broadcastIdUnderlyingType*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
 	*body2 = aliveMsgCounter;
 	// own binary Identifier/Address
 	binId* body3 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)) + sizeof(typeof(body2)));
