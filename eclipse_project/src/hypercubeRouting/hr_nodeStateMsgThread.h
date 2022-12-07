@@ -26,6 +26,8 @@ protected:
 	CommBuffer<NodeState>* nodeStateBuffer;
 	NodeState state;
 
+	floodingMsgCounter nodeStateMsgCounter = 0;
+
 	void sendNodeStateMsg();
 
 private:

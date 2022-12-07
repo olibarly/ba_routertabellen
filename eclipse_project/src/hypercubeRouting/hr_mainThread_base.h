@@ -34,6 +34,8 @@ protected:
 
 	Fifo<RcvMsg, 10> msgFifo;
 
+	std::map<BroadcastIdentifier, std::map<binId, floodingMsgCounter>> expectedFloodingMsgCounters;
+
 	std::map<binId, RoutingTableEntry> routingTable;
 	std::map<binId, AdjacentNode> adjacentNodes;
 	std::map<binId, AdjacentNode> safeAdjacentNodes;
@@ -45,7 +47,7 @@ protected:
 	bool checkBinIdValid(binId BinaryId);
 
 	void updateTable(binId binaryId, RoutingTableEntry routingTableEntry);
-	void removeOutdatedTableEntries();
+	void removeOutdatedTableEntries(int64_t cleanupInterval);
 	/**
 	 * Given the target address [targetAddress] the function determines the UART Gateway [nextHopUartGateway] over which the message will be forwarded.
 	 * Additionally it creates the header [addressing], depending on the addressing method, for said message and gives the header's length [addressingLength].
@@ -54,8 +56,14 @@ protected:
 
 	void send(HAL_UART& uart, const void* msg, size_t size);
 	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize);
+	void forwardFloodingMsg(void* msg, size_t msgSize, HAL_UART* incomingUartGateway);
 
-	void decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody);
+	/**
+	 * Extracts [targetAddress] and [msgBody] from [msg].
+	 * Returns true if [msg] valid, false otherwise.
+	 */
+	bool decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody, size_t msgSize);
+
 	/**
 	* @param size includes header (nodeAddress) and msgBody (body)
 	*/

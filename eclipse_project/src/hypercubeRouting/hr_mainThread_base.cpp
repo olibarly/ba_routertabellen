@@ -45,14 +45,14 @@ void HypercubeRoutingMainThread::updateTable(binId binaryId, RoutingTableEntry r
 	routingTable[binaryId] = routingTableEntry;
 }
 
-void HypercubeRoutingMainThread::removeOutdatedTableEntries() {
+void HypercubeRoutingMainThread::removeOutdatedTableEntries(int64_t cleanupInterval) {
 
 	// TODO: needs refactoring
 
 	std::list<std::map<binId, RoutingTableEntry>::iterator> elementsToRemove;
 
 	for (auto it = routingTable.begin(); it != routingTable.cend(); ++it) {
-		//it->second.ttlSeconds -= loopInterval;
+		it->second.ttlSeconds -= cleanupInterval;
 		if (it->second.ttlSeconds <= 0) elementsToRemove.push_back(it);
 	}
 	for (auto e : elementsToRemove) routingTable.erase(e);
@@ -95,12 +95,27 @@ void HypercubeRoutingMainThread::sendToAddress(binId targetAddress, const void* 
 	free(msg);
 }
 
+void HypercubeRoutingMainThread::forwardFloodingMsg(void* msg, size_t msgSize, HAL_UART* incomingUartGateway) {
+	for (HAL_UART uart : uartGateways) {
+		if (uart != *incomingUartGateway) {
+			send(uart, msg, msgSize);
+		}
+	}
+}
 
 
-void HypercubeRoutingMainThread::decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody) {
+
+bool HypercubeRoutingMainThread::decodeRcvMsg(void* msg, binId& targetAddress, void* msgBody, size_t msgSize) {
 	// TODO: check if Msg valid
+
+	// check if msg has body
+	if (msgSize <= sizeof(binId)) return false;
+
+	// extract header and body
 	targetAddress = *static_cast<binId*>(msg);
 	msgBody = static_cast<binId*>(msg) + 1;
+
+	return true;
 }
 
 void HypercubeRoutingMainThread::handleAliveMsg(HAL_UART* uart, void* msgBody) {
@@ -128,14 +143,15 @@ void HypercubeRoutingMainThread::run() {
 
 			binId targetAddress;
 			void* msgBody;
-			decodeRcvMsg(rcvMsg.msg, targetAddress, msgBody);
-
-			handleRcvMsg(rcvMsg.uart, rcvMsg.msg, targetAddress, msgBody, rcvMsg.size);
+			if (decodeRcvMsg(rcvMsg.msg, targetAddress, msgBody, rcvMsg.size)) {
+				handleRcvMsg(rcvMsg.uart, rcvMsg.msg, targetAddress, msgBody, rcvMsg.size);
+			}
 		}
 
 		if (NOW() >= nextCleanUp) {
-			removeOutdatedTableEntries(); //cleanup
-			nextCleanUp += 5 * SECONDS; // next cleanup in 5sec
+			int64_t  cleanupInterval = 5*SECONDS;
+			removeOutdatedTableEntries(cleanupInterval); //cleanup
+			nextCleanUp += cleanupInterval; // next cleanup in 5sec
 			AT(nextCleanUp); // Sleep until next cleanup or until resumed
 		}
 	}

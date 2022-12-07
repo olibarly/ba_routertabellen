@@ -18,6 +18,7 @@ public:
 protected:
 	HAL_UART(* uartGateways)[2];
 	binId binaryIdentifier;
+	floodingMsgCounter aliveMsgCounter = 0;
 
 	void sendAliveMsg();
 

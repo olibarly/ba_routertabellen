@@ -10,6 +10,21 @@
 
 void HRLogicalAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) {
 	if (targetAddress == BROADCAST_ADDRESS) {
+		broadcastId* bcId = msgBody;
+		floodingMsgCounter* counter = msgBody + sizeof(broadcastId);
+		binId* nodeId = msgBody + sizeof(broadcastId) + sizeof(floodingMsgCounter);
+
+		std::map<broadcastId, std::map<binId, floodingMsgCounter>>::iterator it1 = expectedFloodingMsgCounters.find(bcId);
+		if (it1 != expectedFloodingMsgCounters.end()) {
+			std::map<binId, floodingMsgCounter>::iterator it2 = it1->second.find(binId);
+			if (it2 != it1->second.end()) {
+				if (it2->second != counter)	return; // msg does not have the expected counter value and will therefore be ignored
+			}
+		}
+
+		// if msg has expected counter value or no value is present in the map, update next expected counter value
+		expectedFloodingMsgCounters[bcId][nodeId] = counter + 1;
+
 		switch(static_cast<BroadcastIdentifier*>(msg)[0]) {
 		case ALIVE:
 			handleAliveMsg(uart, msg);
@@ -18,8 +33,11 @@ void HRLogicalAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId ta
 			calculateNodeState(uart, msgBody);
 			break;
 		}
-	} else if (targetAddress) {
 
+		forwardFloodingMsg(msg, size, uart);
+
+	} else if (targetAddress) {
+		// handle internally
 	} else if (targetAddress != binaryIdentifier) {
 		HAL_UART* nextHopGateway;
 		binId nextHopAddress;

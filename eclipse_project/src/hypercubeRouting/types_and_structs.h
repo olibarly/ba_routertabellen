@@ -13,6 +13,7 @@
 
 typedef uint8_t binId;
 typedef uint8_t broadcastId;
+typedef uint8_t floodingMsgCounter;
 typedef uint8_t nodeStateUnderlying;
 #define BROADCAST_ADDRESS		0b11111111
 

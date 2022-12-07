@@ -23,6 +23,7 @@ void HypercubeRoutingAliveMsgThread::sendAliveMsg() {
 	 *
 	 * Body:
 	 * Broadcast Message Identifier (ALIVE)
+	 * Alive Message Counter
 	 * binary Identifier of self [binId]
 	 */
 
@@ -31,16 +32,23 @@ void HypercubeRoutingAliveMsgThread::sendAliveMsg() {
 	// Header: Target Address
 	binId* header = static_cast<binId*>(msg);
 	*header = BROADCAST_ADDRESS;
+
 	// Body:
+	// Broadcast Msg Id
 	broadcastId* body1 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)));
 	*body1 = ALIVE;
+	// AliveMsg Counter
+	floodingMsgCounter* body2 = static_cast<broadcastId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
+	*body2 = aliveMsgCounter;
 	// own binary Identifier/Address
-	binId* body2 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)));
-	*body2 = binaryIdentifier;
+	binId* body3 = static_cast<binId*>(msg + sizeof(typeof(*header)) + sizeof(typeof(body1)) + sizeof(typeof(body2)));
+	*body3 = binaryIdentifier;
 
 	for (HAL_UART uart : *uartGateways) uart.write(msg, size);
 
 	free(msg);
+
+	aliveMsgCounter++;
 }
 
 void HypercubeRoutingAliveMsgThread::run() {
