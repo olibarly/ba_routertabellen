@@ -95,12 +95,11 @@ void HypercubeRoutingMainThread::sendToAddress(binId targetAddress, const void* 
 	free(msg);
 }
 
-void HypercubeRoutingMainThread::forwardFloodingMsg(void* msg, size_t msgSize, HAL_UART* incomingUartGateway) {
-	for (HAL_UART uart : uartGateways) {
-		// TODO: how to compare HAL_UART objects
-		//if (uart != *incomingUartGateway) {
-			send(uart, msg, msgSize);
-		//}
+void HypercubeRoutingMainThread::forwardFloodingMsg(void* msg, size_t msgSize, binId sourceId) {
+	for (std::map<binId, AdjacentNode>::iterator it = adjacentNodes.begin(); it != adjacentNodes.end(); ++it) {
+		if (sourceId != it->first) {
+			send(*(it->second.uartGateway), msg, msgSize);
+		}
 	}
 }
 

@@ -56,7 +56,7 @@ protected:
 
 	void send(HAL_UART& uart, const void* msg, size_t size);
 	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize);
-	void forwardFloodingMsg(void* msg, size_t msgSize, HAL_UART* incomingUartGateway);
+	void forwardFloodingMsg(void* msg, size_t msgSize, binId sourceId);
 
 	/**
 	 * Extracts [targetAddress] and [msgBody] from [msg].

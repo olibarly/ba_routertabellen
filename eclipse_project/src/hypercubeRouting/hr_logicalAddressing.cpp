@@ -34,7 +34,7 @@ void HRLogicalAddressing::handleRcvMsg(HAL_UART* uart, void* msg, const binId ta
 			break;
 		}
 
-		forwardFloodingMsg(msg, size, uart);
+		forwardFloodingMsg(msg, size, *nodeId);
 
 	} else if (targetAddress) {
 		// handle internally
