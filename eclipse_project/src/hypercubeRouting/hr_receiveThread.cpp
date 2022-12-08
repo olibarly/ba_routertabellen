@@ -12,6 +12,8 @@ HypercubeRoutingReceiveThread::HypercubeRoutingReceiveThread(HAL_UART(* uartGate
 	this->uartGateways = uartGateways;
 }
 
+HypercubeRoutingReceiveThread::~HypercubeRoutingReceiveThread() {}
+
 
 size_t HypercubeRoutingReceiveThread::receive(HAL_UART* uart, void* rcvBuffer, const size_t maxLen /* = 100*/) {
 	if (uart->isDataReady()) return uart->read(rcvBuffer, maxLen);
@@ -27,6 +29,8 @@ void HypercubeRoutingReceiveThread::receiveMsgs() {
 		}
 	}
 }
+
+void HypercubeRoutingReceiveThread::init() {}
 
 void HypercubeRoutingReceiveThread::run() {
 	while(1) receiveMsgs();

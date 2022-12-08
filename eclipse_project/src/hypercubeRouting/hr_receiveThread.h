@@ -14,6 +14,7 @@
 class HypercubeRoutingReceiveThread : StaticThread<> {
 public:
 	HypercubeRoutingReceiveThread(HAL_UART(* uartGateways)[2], Fifo<RcvMsg, 10>* msgFifo);
+	virtual ~HypercubeRoutingReceiveThread();
 
 protected:
 	Fifo<RcvMsg, 10>* msgFifo;

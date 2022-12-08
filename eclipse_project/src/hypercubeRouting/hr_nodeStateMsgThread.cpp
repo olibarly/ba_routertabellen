@@ -15,6 +15,8 @@ HypercubeRoutingNodeStateThread::HypercubeRoutingNodeStateThread(HAL_UART(* uart
 	this->nodeStateBuffer = nodeStateBuffer;
 }
 
+HypercubeRoutingNodeStateThread::~HypercubeRoutingNodeStateThread() {}
+
 void HypercubeRoutingNodeStateThread::sendNodeStateMsg() {
 	/**
 	 * MSG Format:
@@ -54,6 +56,8 @@ void HypercubeRoutingNodeStateThread::sendNodeStateMsg() {
 
 	nodeStateMsgCounter++;
 }
+
+void HypercubeRoutingNodeStateThread::init() {}
 
 void HypercubeRoutingNodeStateThread::run() {
 	while(1) {

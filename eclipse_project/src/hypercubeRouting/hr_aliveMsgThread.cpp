@@ -9,10 +9,13 @@
 #include <stdlib.h>
 
 
+
 HypercubeRoutingAliveMsgThread::HypercubeRoutingAliveMsgThread(HAL_UART(* uartGateways)[2], binId binaryIdentifier) {
 	this->uartGateways = uartGateways;
 	this->binaryIdentifier = binaryIdentifier;
 }
+
+HypercubeRoutingAliveMsgThread::~HypercubeRoutingAliveMsgThread() {}
 
 void HypercubeRoutingAliveMsgThread::sendAliveMsg() {
 	// TODO: Add Msg Counter for Flooding Msg Identification
@@ -50,6 +53,8 @@ void HypercubeRoutingAliveMsgThread::sendAliveMsg() {
 
 	aliveMsgCounter++;
 }
+
+void HypercubeRoutingAliveMsgThread::init() {}
 
 void HypercubeRoutingAliveMsgThread::run() {
 	TIME_LOOP(0, 5*SECONDS) {

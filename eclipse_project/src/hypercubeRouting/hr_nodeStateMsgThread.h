@@ -15,6 +15,7 @@
 class HypercubeRoutingNodeStateThread : StaticThread<> {
 public:
 	HypercubeRoutingNodeStateThread(HAL_UART(* uartGateways)[2], binId id, CommBuffer<NodeState>* commBuff);
+	virtual ~HypercubeRoutingNodeStateThread();
 
 	void resume() {
 		StaticThread::resume();

@@ -1,4 +1,4 @@
-/*
+/*routing
  * hr_AliveMsgThread.h
  *
  *  Created on: Dec 4, 2022
@@ -14,6 +14,7 @@
 class HypercubeRoutingAliveMsgThread : StaticThread<> {
 public:
 	HypercubeRoutingAliveMsgThread(HAL_UART(* uartGateways)[2], binId id);
+	virtual ~HypercubeRoutingAliveMsgThread();
 
 protected:
 	HAL_UART(* uartGateways)[2];

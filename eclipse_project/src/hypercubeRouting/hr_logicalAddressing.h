@@ -13,6 +13,8 @@
 #include "hr_mainThread_base.h"
 
 class HRLogicalAddressing : HypercubeRoutingMainThread {
+public:
+	HRLogicalAddressing(binId id) : HypercubeRoutingMainThread(id) {}
 private:
 	/**
 	 * @param

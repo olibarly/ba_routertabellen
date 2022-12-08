@@ -21,7 +21,7 @@ HAL_UART uartIDX1(UART_IDX1); // working: UART_IDX1, UARTIDX2, UART_IDX6
 HAL_UART uartIDX6(UART_IDX6);
 
 
-HypercubeRoutingMainThread::HypercubeRoutingMainThread(binId binaryId) : StaticThread(), uartGateways{uartIDX1, uartIDX6}, nodeStateThread(&uartGateways, binaryIdentifier, &nodeStateBuffer){
+HypercubeRoutingMainThread::HypercubeRoutingMainThread(binId binaryId) : StaticThread(), uartGateways{uartIDX1, uartIDX6}, nodeStateThread(&uartGateways, binaryIdentifier, &nodeStateBuffer) {
 	assert(checkBinIdValid(binaryId));
 	binaryIdentifier = binaryId;
 
@@ -35,6 +35,8 @@ HypercubeRoutingMainThread::HypercubeRoutingMainThread(binId binaryId) : StaticT
 
 	// TODO: Fault Tolerance: initialize NodeState Maps (issue #21)
 }
+
+HypercubeRoutingMainThread::~HypercubeRoutingMainThread() {}
 
 bool HypercubeRoutingMainThread::checkBinIdValid(binId binaryId) {
 	return binaryId != BROADCAST_ADDRESS;

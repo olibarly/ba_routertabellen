@@ -22,6 +22,7 @@
 class HypercubeRoutingMainThread : StaticThread<> {
 public:
 	HypercubeRoutingMainThread(binId binaryId); //allows up to 256 different IDs, with 256 being used as a "broadcast" address
+	virtual ~HypercubeRoutingMainThread();
 
 protected:
 	HypercubeRoutingNodeStateThread nodeStateThread;
@@ -52,7 +53,7 @@ protected:
 	 * Given the target address [targetAddress] the function determines the UART Gateway [nextHopUartGateway] over which the message will be forwarded.
 	 * Additionally it creates the header [addressing], depending on the addressing method, for said message and gives the header's length [addressingLength].
 	 */
-	virtual void calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength);
+	virtual void calculateAddressing(const binId targetAddress, HAL_UART* nextHopUartGateway, binId* addressing, size_t* addressingLength) = 0;
 
 	void send(HAL_UART& uart, const void* msg, size_t size);
 	void sendToAddress(binId targetAddress, const void* msgBody, size_t msgBodySize);
@@ -67,7 +68,7 @@ protected:
 	/**
 	* @param size includes header (nodeAddress) and msgBody (body)
 	*/
-	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size);
+	virtual void handleRcvMsg(HAL_UART* uart, void* msg, const binId targetAddress, void* msgBody, size_t size) = 0;
 	void handleAliveMsg(HAL_UART* uart, void* msgBody);
 
 private:

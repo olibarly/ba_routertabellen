@@ -14,6 +14,8 @@
 #include "hr_mainThread_base.h"
 
 class HRPathAddressing : HypercubeRoutingMainThread {
+public:
+	HRPathAddressing(binId id) : HypercubeRoutingMainThread(id) {}
 private:
 	std::map<binId, RoutingTableEntry> routingTable;
 

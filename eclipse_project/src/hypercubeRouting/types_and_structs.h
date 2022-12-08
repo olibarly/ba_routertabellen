@@ -35,7 +35,7 @@ struct UART_Gateway {
 };
 
 struct RoutingTableEntry {
-	RoutingTableEntry();
+	RoutingTableEntry() {};
 	RoutingTableEntry(binId t, HAL_UART* u) {
 		RoutingTableEntry(t, &t, 1, u);
 	}
@@ -62,7 +62,7 @@ struct RoutingTableEntry {
 };
 
 struct AdjacentNode {
-	AdjacentNode();
+	AdjacentNode() {};
 	AdjacentNode(binId ownAddress, binId adjacentNodeAddress, HAL_UART* gateway, NodeState state) {
 		nodeAddress = adjacentNodeAddress;
 		uartGateway = gateway;
@@ -77,7 +77,7 @@ struct AdjacentNode {
 };
 
 struct RcvMsg {
-	RcvMsg();
+	RcvMsg() {};
 	RcvMsg(HAL_UART* u, void* m, size_t s) {
 		uart = u;
 		msg = m;
